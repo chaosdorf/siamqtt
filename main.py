@@ -14,18 +14,16 @@ def handle_event(event: SIAEvent) -> None:
     assert event.valid_message
     parsed = ParsedEvent.from_sia(event)
     print(parsed)
-    if parsed:
-        mqtt.publish(f"sia/{parsed.type_}", parsed.triggered)
+    mqtt.publish(f"sia/{parsed.type_}", parsed.triggered)
 
 class ParsedEvent(NamedTuple):
     type_: int
     triggered: bool
 
     @classmethod
-    def from_sia(cls, event: SIAEvent) -> Optional[ParsedEvent]:
+    def from_sia(cls, event: SIAEvent) -> ParsedEvent:
         if not event.ri:
-            print(f"unknown event ri")
-            return None
+            raise ValueError("unknown event ri")
         type_ = int(event.ri)
         match event.code:
             case "BA" | "FA" | "YX":
@@ -33,8 +31,7 @@ class ParsedEvent(NamedTuple):
             case "BH" | "FH" | "YZ":
                 triggered = False
             case code:
-                print(f"unknown event code: {code}")
-                return None
+                raise NotImplementedError(f"unknown event code: {code}")
         return cls(type_, triggered)
 
 config = toml.load(environ.get("CONFIG_FILE", "siamqtt.toml"))
