@@ -7,6 +7,7 @@ from typing import NamedTuple, Optional
 def handle_event(event: SIAEvent) -> None:
     #print(event)
     print(event.ri, event.code)
+    assert event.valid_message
     parsed = ParsedEvent.from_sia(event)
     print(parsed)
 
