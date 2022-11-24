@@ -18,7 +18,7 @@ def handle_event(event: SIAEvent) -> None:
     assert event.valid_message
     parsed = ParsedEvent.from_sia(event)
     print(parsed)
-    mqtt.publish(f"sia/{parsed.type_}", parsed.triggered)
+    mqtt.publish(f"sia/{parsed.type_}", str(parsed.triggered).lower())
 
 class ParsedEvent(NamedTuple):
     type_: int
