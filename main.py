@@ -7,10 +7,13 @@ from time import sleep
 from os import environ
 import logging
 from pathlib import Path
+import json
 from paho.mqtt.client import Client as MqttClient
 import toml
 
 DSN_PATH = Path("/run/secrets/SIAMQTT_SENTRY_DSN")
+
+logger = logging.getLogger(__name__)
 
 def handle_event(event: SIAEvent) -> None:
     #print(event)
@@ -18,17 +21,20 @@ def handle_event(event: SIAEvent) -> None:
     assert event.valid_message
     parsed = ParsedEvent.from_sia(event)
     print(parsed)
-    mqtt.publish(f"sia/{parsed.type_}", str(parsed.triggered).lower())
+    parsed.publish_to(mqtt)
+
+def hass_topic_for_zone(zone: int) -> str:
+    return f"homeassistant/binary_sensor/sia-{zone}/state"
 
 class ParsedEvent(NamedTuple):
-    type_: int
+    zone: int
     triggered: bool
 
     @classmethod
     def from_sia(cls, event: SIAEvent) -> ParsedEvent:
         if not event.ri:
             raise ValueError("unknown event ri")
-        type_ = int(event.ri)
+        zone = int(event.ri)
         match event.code:
             case "BA" | "FA" | "YX":
                 triggered = True
@@ -36,7 +42,17 @@ class ParsedEvent(NamedTuple):
                 triggered = False
             case code:
                 raise NotImplementedError(f"unknown event code: {code}")
-        return cls(type_, triggered)
+        return cls(zone, triggered)
+    
+    def publish_to(self, mqtt: MqttClient) -> None:
+        if "homeassistant" in config["mqtt"]:
+            mqtt.publish(
+                hass_topic_for_zone(self.zone),
+                "ON" if self.triggered else "OFF",
+            )
+        else:
+            mqtt.publish(f"sia/{self.zone}", str(self.triggered).lower())
+                
 
 if DSN_PATH.exists():
     import sentry_sdk
@@ -57,6 +73,24 @@ sia = SIAClient(
 mqtt = MqttClient()
 mqtt.connect(config["mqtt"]["server"])
 
+if "homeassistant" in config["mqtt"]:
+    logger.info("Registering devices with hass...")
+    for zone, zone_conf in config["mqtt"]["homeassistant"]["device"].items():
+        mqtt.publish(
+            f"homeassistant/binary_sensor/sia-{zone}/config",
+            json.dumps({
+                "name": zone_conf["name"],
+                "state_topic": hass_topic_for_zone(zone),
+            }),
+        )
+
 with sia as s:
+    logger.info("Waiting for events...")
     while True:
         sleep(500)
+
+# TODO
+if "homeassistant" in config["mqtt"]:
+    logger.info("Deregistering from hass...")
+    for zone in config["mqtt"]["homeassistant"]["device"]:
+        mqtt.publish(f"homeassistant/binary_sensor/sia-{zone}/config", "")

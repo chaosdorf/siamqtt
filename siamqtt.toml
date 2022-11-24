@@ -5,3 +5,6 @@ accounts = ["12345678"]
 
 [mqtt]
 server = "mqttserver"
+
+# [mqtt.homeassistant.device.ZONE]
+# name = ""
