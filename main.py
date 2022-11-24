@@ -3,6 +3,7 @@ from __future__ import annotations
 # TODO: replace with async?
 from pysiaalarm import SIAClient, SIAAccount, SIAEvent
 from typing import NamedTuple, Optional
+from paho.mqtt.client import Client as MqttClient
 
 def handle_event(event: SIAEvent) -> None:
     #print(event)
@@ -10,6 +11,8 @@ def handle_event(event: SIAEvent) -> None:
     assert event.valid_message
     parsed = ParsedEvent.from_sia(event)
     print(parsed)
+    if parsed:
+        mqtt.publish(f"sia/{parsed.type_}", parsed.triggered)
 
 class ParsedEvent(NamedTuple):
     type_: int
@@ -32,6 +35,9 @@ class ParsedEvent(NamedTuple):
         return cls(type_, triggered)
 
 sia = SIAClient("0.0.0.0", 1234, [SIAAccount("12345678")], handle_event)
+mqtt = MqttClient()
+mqtt.connect("mqttserver")
+
 with sia as s:
     while True:
         pass

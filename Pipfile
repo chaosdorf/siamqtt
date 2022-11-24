@@ -5,6 +5,7 @@ name = "pypi"
 
 [packages]
 pysiaalarm = "*"
+paho-mqtt = "*"
 
 [dev-packages]
 mypy = "*"
