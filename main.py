@@ -26,9 +26,9 @@ class ParsedEvent(NamedTuple):
             return None
         type_ = int(event.ri)
         match event.code:
-            case "BA" | "FA" | "YZ":
+            case "BA" | "FA" | "YX":
                 triggered = True
-            case "BH" | "FH" | "YX":
+            case "BH" | "FH" | "YZ":
                 triggered = False
             case code:
                 print(f"unknown event code: {code}")
