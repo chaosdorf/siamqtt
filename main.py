@@ -3,6 +3,7 @@ from __future__ import annotations
 # TODO: replace with async?
 from pysiaalarm import SIAClient, SIAAccount, SIAEvent
 from typing import NamedTuple, Optional
+from time import sleep
 from paho.mqtt.client import Client as MqttClient
 
 def handle_event(event: SIAEvent) -> None:
@@ -40,4 +41,4 @@ mqtt.connect("mqttserver")
 
 with sia as s:
     while True:
-        pass
+        sleep(500)
