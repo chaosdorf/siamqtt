@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from __future__ import annotations
+import atexit
 # TODO: replace with async?
 from pysiaalarm import SIAClient, SIAAccount, SIAEvent
 from typing import NamedTuple, Optional
@@ -44,7 +45,7 @@ class ParsedEvent(NamedTuple):
                 raise NotImplementedError(f"unknown event code: {code}")
         return cls(zone, triggered)
     
-    def publish_to(self, mqtt: MqttClient) -> None:
+    def publish_to_mqtt(self) -> None:
         if "homeassistant" in config["mqtt"]:
             mqtt.publish(
                 hass_topic_for_zone(self.zone),
@@ -84,13 +85,16 @@ if "homeassistant" in config["mqtt"]:
             }),
         )
 
+
+def on_exit() -> None:
+    if "homeassistant" in config["mqtt"]:
+        logger.info("Deregistering from hass...")
+        for zone in config["mqtt"]["homeassistant"]["device"]:
+            mqtt.publish(f"homeassistant/binary_sensor/sia-{zone}/config", "")
+
+atexit.register(on_exit)
+
 with sia as s:
     logger.info("Waiting for events...")
     while True:
         sleep(500)
-
-# TODO
-if "homeassistant" in config["mqtt"]:
-    logger.info("Deregistering from hass...")
-    for zone in config["mqtt"]["homeassistant"]["device"]:
-        mqtt.publish(f"homeassistant/binary_sensor/sia-{zone}/config", "")
