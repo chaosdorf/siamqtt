@@ -5,8 +5,12 @@ from pysiaalarm import SIAClient, SIAAccount, SIAEvent
 from typing import NamedTuple, Optional
 from time import sleep
 from os import environ
+import logging
+from pathlib import Path
 from paho.mqtt.client import Client as MqttClient
 import toml
+
+DSN_PATH = Path("/run/secrets/SIAMQTT_SENTRY_DSN")
 
 def handle_event(event: SIAEvent) -> None:
     #print(event)
@@ -33,6 +37,15 @@ class ParsedEvent(NamedTuple):
             case code:
                 raise NotImplementedError(f"unknown event code: {code}")
         return cls(type_, triggered)
+
+if DSN_PATH.exists():
+    import sentry_sdk
+    from sentry_sdk.integrations.logging import LoggingIntegration
+    sentry_logging = LoggingIntegration(
+        level=logging.INFO, # Capture as breadcrumbs
+        event_level=logging.WARNING, # Send as events
+    )
+    sentry_sdk.init(DSN_PATH.read_text().strip())
 
 config = toml.load(environ.get("CONFIG_FILE", "siamqtt.toml"))
 sia = SIAClient(
