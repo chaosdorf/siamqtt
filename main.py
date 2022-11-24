@@ -50,9 +50,14 @@ class ParsedEvent(NamedTuple):
             mqtt.publish(
                 hass_topic_for_zone(self.zone),
                 "ON" if self.triggered else "OFF",
+                retain=True,
             )
         else:
-            mqtt.publish(f"sia/{self.zone}", str(self.triggered).lower())
+            mqtt.publish(
+                f"sia/{self.zone}",
+                str(self.triggered).lower(),
+                retain=True,
+            )
                 
 
 if DSN_PATH.exists():
@@ -84,6 +89,7 @@ if "homeassistant" in config["mqtt"]:
                 "name": zone_conf["name"],
                 "state_topic": hass_topic_for_zone(zone),
             }),
+            retain=True,
         )
 
 
@@ -91,7 +97,11 @@ def on_exit() -> None:
     if "homeassistant" in config["mqtt"]:
         logger.info("Deregistering from hass...")
         for zone in config["mqtt"]["homeassistant"]["device"]:
-            mqtt.publish(f"homeassistant/binary_sensor/sia-{zone}/config", "")
+            mqtt.publish(
+                f"homeassistant/binary_sensor/sia-{zone}/config",
+                "",
+                retain=True,
+            )
 
 atexit.register(on_exit)
 
