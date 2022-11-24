@@ -14,6 +14,7 @@ import toml
 
 DSN_PATH = Path("/run/secrets/SIAMQTT_SENTRY_DSN")
 
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def handle_event(event: SIAEvent) -> None:
@@ -22,7 +23,7 @@ def handle_event(event: SIAEvent) -> None:
     assert event.valid_message
     parsed = ParsedEvent.from_sia(event)
     print(parsed)
-    parsed.publish_to(mqtt)
+    parsed.publish_to_mqtt()
 
 def hass_topic_for_zone(zone: int) -> str:
     return f"homeassistant/binary_sensor/sia-{zone}/state"
@@ -56,6 +57,7 @@ class ParsedEvent(NamedTuple):
                 
 
 if DSN_PATH.exists():
+    logger.info("Configuring Sentry...")
     import sentry_sdk
     from sentry_sdk.integrations.logging import LoggingIntegration
     sentry_logging = LoggingIntegration(
