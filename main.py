@@ -18,11 +18,10 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def handle_event(event: SIAEvent) -> None:
-    #print(event)
-    print(event.ri, event.code)
+    logger.debug("got ri %s and code %s", event.ri, event.code)
     assert event.valid_message
     parsed = ParsedEvent.from_sia(event)
-    print(parsed)
+    logger.debug("parsed: %s", parsed)
     parsed.publish_to_mqtt()
 
 def hass_topic_for_zone(zone: int) -> str:
