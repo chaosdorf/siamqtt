@@ -4,7 +4,9 @@ from __future__ import annotations
 from pysiaalarm import SIAClient, SIAAccount, SIAEvent
 from typing import NamedTuple, Optional
 from time import sleep
+from os import environ
 from paho.mqtt.client import Client as MqttClient
+import toml
 
 def handle_event(event: SIAEvent) -> None:
     #print(event)
@@ -35,9 +37,15 @@ class ParsedEvent(NamedTuple):
                 return None
         return cls(type_, triggered)
 
-sia = SIAClient("0.0.0.0", 1234, [SIAAccount("12345678")], handle_event)
+config = toml.load(environ.get("CONFIG_FILE", "siamqtt.toml"))
+sia = SIAClient(
+    config["sia"]["bind"],
+    config["sia"]["port"],
+    [SIAAccount(account) for account in config["sia"]["accounts"]],
+    handle_event,
+)
 mqtt = MqttClient()
-mqtt.connect("mqttserver")
+mqtt.connect(config["mqtt"]["server"])
 
 with sia as s:
     while True:
