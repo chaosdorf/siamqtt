@@ -14,7 +14,7 @@ import toml
 
 DSN_PATH = Path("/run/secrets/SIAMQTT_SENTRY_DSN")
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 def handle_event(event: SIAEvent) -> None:
@@ -57,7 +57,7 @@ class ParsedEvent(NamedTuple):
                 f"sia/{self.zone}",
                 str(self.triggered).lower(),
                 retain=True,
-            )
+                )
                 
 
 if DSN_PATH.exists():
