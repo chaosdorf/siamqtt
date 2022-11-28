@@ -68,7 +68,11 @@ if DSN_PATH.exists():
         level=logging.INFO, # Capture as breadcrumbs
         event_level=logging.WARNING, # Send as events
     )
-    sentry_sdk.init(DSN_PATH.read_text().strip())
+    sentry_sdk.init(
+        DSN_PATH.read_text().strip(),
+        debug=True,
+        attach_stacktrace=True,
+    )
 
 config = toml.load(environ.get("CONFIG_FILE", "siamqtt.toml"))
 sia = SIAClient(
