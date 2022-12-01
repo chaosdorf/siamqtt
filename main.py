@@ -115,5 +115,4 @@ atexit.register(on_exit)
 
 with sia as s:
     logger.info("Waiting for events...")
-    while True:
-        sleep(500)
+    mqtt.loop_forever()
