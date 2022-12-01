@@ -18,11 +18,15 @@ logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 def handle_event(event: SIAEvent) -> None:
-    logger.debug("got ri %s and code %s", event.ri, event.code)
-    assert event.valid_message
-    parsed = ParsedEvent.from_sia(event)
-    logger.debug("parsed: %s", parsed)
-    parsed.publish_to_mqtt()
+    try:
+        logger.debug("got ri %s and code %s", event.ri, event.code)
+        assert event.valid_message
+        parsed = ParsedEvent.from_sia(event)
+        logger.debug("parsed: %s", parsed)
+        parsed.publish_to_mqtt()
+    except Exception as exc:
+        sentry_sdk.capture_exception(exc)
+        raise
 
 def hass_topic_for_zone(zone: int) -> str:
     return f"homeassistant/binary_sensor/sia-{zone}/state"
