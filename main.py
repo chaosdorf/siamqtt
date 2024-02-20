@@ -10,6 +10,7 @@ import logging
 from pathlib import Path
 import json
 from paho.mqtt.client import Client as MqttClient
+from paho.mqtt.client import CallbackAPIVersion as MqttCallbackAPIVersion
 import toml
 
 DSN_PATH = Path("/run/secrets/SIAMQTT_SENTRY_DSN")
@@ -88,7 +89,7 @@ sia = SIAClient(
     ],
     handle_event,
 )
-mqtt = MqttClient()
+mqtt = MqttClient(MqttCallbackAPIVersion.VERSION2)
 mqtt.connect(config["mqtt"]["server"])
 
 if "homeassistant" in config["mqtt"]:
