@@ -69,14 +69,16 @@ if DSN_PATH.exists():
     logger.info("Configuring Sentry...")
     import sentry_sdk
     from sentry_sdk.integrations.logging import LoggingIntegration
-    sentry_logging = LoggingIntegration(
-        level=logging.INFO, # Capture as breadcrumbs
-        event_level=logging.WARNING, # Send as events
-    )
     sentry_sdk.init(
         DSN_PATH.read_text().strip(),
         debug=True,
         attach_stacktrace=True,
+        integrations=[
+            LoggingIntegration(
+                level=logging.INFO, # Capture as breadcrumbs
+                event_level=logging.WARNING, # Send as events
+            ),
+        ],
     )
 
 config = toml.load(environ.get("CONFIG_FILE", "siamqtt.toml"))
