@@ -82,7 +82,10 @@ config = toml.load(environ.get("CONFIG_FILE", "siamqtt.toml"))
 sia = SIAClient(
     config["sia"]["bind"],
     config["sia"]["port"],
-    [SIAAccount(account) for account in config["sia"]["accounts"]],
+    [
+        SIAAccount(account, allowed_timeband=(300, 300))
+        for account in config["sia"]["accounts"]
+    ],
     handle_event,
 )
 mqtt = MqttClient()
